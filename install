@@ -1,11 +1,11 @@
 
 
-
 # griffen install for mac
 def installEverything
     #
     # xcode tools 
     #
+        puts "Starting install of x-code tools"
         `xcode-select --install`
         puts "Okay xcode should be installed, press enter to continue"
         gets
@@ -13,11 +13,12 @@ def installEverything
     #
     # homebrew
     #
+        puts "Starting install of homebrew"
         `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 
         #check homebrew
-        response = `brew doctor`
-        homebrew_installed = (  nil != response.match(/Your system is ready to brew/)  )
+        response = `brew -v`
+        homebrew_installed = (  nil != response.match(/Homebrew \d+\.\d+/)  )
 
         # FIXME, what to do if homebrew didn't install
         if not homebrew_installed
@@ -32,6 +33,7 @@ def installEverything
     # node.js
     #
 
+        puts "okay, starting to install node"
         output = `brew install node`
         puts "okay just now ran the command for installing node" 
     
