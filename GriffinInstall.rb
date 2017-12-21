@@ -7,6 +7,8 @@ def installEverything
     # xcode tools 
     #
         `xcode-select --install`
+        puts "Okay xcode should be installed, press enter to continue"
+        gets
 
     #
     # homebrew
@@ -22,13 +24,17 @@ def installEverything
             puts "I couldn't get homebrew to install for some reason :/"
             return 
         end#if
+    
+        puts "Okay homebrew should be installed, press enter to continue"
+        gets
 
     #
     # node.js
     #
 
         output = `brew install node`
-
+        puts "okay just now ran the command for installing node" 
+    
         # Does path need to be fixed?
             # lots of times when installing node
             # the node command still wont work because the 
@@ -76,13 +82,22 @@ def installEverything
             puts "I couldn't get node.js installed :/"
             return
         end#if
+        
+        puts "Okay node should be installed and checked, press enter to continue"
+        gets
     #
     # pug, SASS, CoffeeScript, Electron, Electron-Dev
     #
+        puts "about to install pug"
         `npm install -g pug`
+        puts "about to install sass"
         `npm install -g sass`
+        puts "about to install coffeescript"
         `npm install -g coffeescript`
+        puts "about to install electron"
         `npm install -g electron`
+        puts "about to install electron-dev"
         `npm install -g electron-dev`
+        puts "okay all of those should be installed"
 end#installEverything
 installEverything
