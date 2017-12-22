@@ -737,27 +737,10 @@ if ARGV.length >= 1
             
             # FIXME, I should probably do some ' escaping for the app_name and such
             # create the applescript code
-            #
-            #
-            #    tell application "Finder" to get folder of (path to me) as Unicode text
-            #    set path_ to POSIX path of result
-    
-
-            #    tell application "Terminal"
-            #        do script "cd '" & path_ & "test.Grif.app';electron ."
-            #    end tell
-
-            #    tell application "System Events"
-            #        try
-            #            set visible of application process "Terminal" to false
-            #        end try
-            #    end tell
-
-
             apple_code = <<-APPLECODE.remove_indent
             tell application "Finder" to get folder of (path to me) as Unicode text
             set path_ to POSIX path of result
-            do shell script "cd '" & path_ & "#{app_name}.Grif.app';electron ."
+            do shell script "export PATH=\"/usr/local/bin:$PATH\";cd '" & path_ & "#{app_name}.Grif.app';electron ."
             APPLECODE
             # create the applescript file
             createFile(name:".code.applescript", path:path_, code:apple_code)
