@@ -1,5 +1,7 @@
 require 'open3'
 
+# FIXME, make this remove itself once its done
+
 
 # griffin install for mac
 def installEverything
@@ -160,8 +162,16 @@ def installEverything
         puts 
         puts "I'm going to put the Griffin files in /usr/local/bin/"
         puts "(Thats where pretty much all normal commands go)"
+        # if the file already exists, then delete it
+        if File.exist? "/usr/local/bin/Griffin.rb"
+            `rm /usr/local/bin/Griffin.rb`
+        end 
         `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/Griffin.rb 1>/usr/local/bin/Griffin.rb`
         `chmod u+x /usr/local/bin/Griffin.rb`
+        # if the file already exists, then delete it
+        if File.exist? "/usr/local/bin/griffin"
+            `rm /usr/local/bin/griffin`
+        end 
         `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/griffin 1>/usr/local/bin/griffin`
         `chmod u+x /usr/local/bin/griffin`
         puts "Okay, Griffin has been installed!"

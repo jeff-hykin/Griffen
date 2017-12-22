@@ -2,44 +2,64 @@
 #    Some tools  
 #
     # debugging helper 
-    $debugging = false
-    $indent = ""
-    def dput(string_input)
-        if $debugging
-            puts $indent + "#{string_input}"
-        end
-    end 
+        $debugging = false
+        $indent = ""
+        def dput(string_input)
+            if $debugging
+                puts $indent + "#{string_input}"
+            end
+        end 
+
+    # create file
+        def createFile(name:nil,path:"",code:nil)
+            # error checking 
+                if name == nil
+                    puts "When you're using createFile, You need a name"
+                end
+                # make sure the path ends with a /
+                if path.length > 0 
+                    if path.match(/[^\/]$/)
+                        path = path + "/"
+                    end
+                end 
+            # actual code
+            the_file = File.new(path+name,"w+")
+            if code != nil 
+                the_file.write(code)
+            end 
+            the_file.close
+        end#create file
 
     # check if folder exists 
-    def folderExists(folder)
-        File.directory? folder
-    end
+        def folderExists(folder)
+            File.directory? folder
+        end
 
     # shell commands that include stderr
-    class String
-        # make -"" strings be shell commands that include stderr
-        def -@
-            require 'open3'
-            stdout, stderr, status = Open3.capture3("bash;"+self)
-            if stderr.length > 0 
-                return (stderr.sub(/sh: /,"")).chomp
-            else
-                return stdout.chomp
-            end 
-        end#def
-    end#String
+        class String
+            # make -"" strings be shell commands that include stderr
+            def -@
+                require 'open3'
+                stdout, stderr, status = Open3.capture3("bash;"+self)
+                if stderr.length > 0 
+                    return (stderr.sub(/sh: /,"")).chomp
+                else
+                    return stdout.chomp
+                end 
+            end#def
+        end#String
 
     # heredoc that removes indent 
-    class String
-        # example usage 
-            # puts <<-HEREDOC.remove_indent
-            # This command does such and such.
-            #     this part is extra indented
-            # HEREDOC
-        def remove_indent
-            gsub(/^[ \t]{#{self.match(/^[ \t]*/)[0].length}}/, '')
+        class String
+            # example usage 
+                # puts <<-HEREDOC.remove_indent
+                # This command does such and such.
+                #     this part is extra indented
+                # HEREDOC
+            def remove_indent
+                gsub(/^[ \t]{#{self.match(/^[ \t]*/)[0].length}}/, '')
+            end
         end
-    end
 #
 #    End Some tools
 #
@@ -683,8 +703,7 @@ $indent = '    '
 # if there is one argument or more
 if ARGV.length >= 1
     dput "starting griffen, one or more args"
-    path_ = `pwd`
-    path_ = path_.chomp+"/"
+    path_ = Dir.pwd + "/"
     dput "path is:#{path_}"
     dput "file is #{path_+ARGV[0]}"
     the_file = File.open(path_+ARGV[0])
@@ -698,18 +717,36 @@ if ARGV.length >= 1
     if ARGV.length >= 2 
         # use the second argument as the griffen app name if there is a second argument
         app_name = ARGV[1].sub(/\.grif$/,"")
-        folder_path = path_+app_name+".Grif.app"
+        app_path = path_+app_name+".Grif.app"
     else
         # use the same filename 
         app_name = ARGV[0].sub(/\.grif$/,"")
-        folder_path = path_+app_name+".Grif.app"
+        app_path = path_+app_name+".Grif.app"
     end
     
-    # check if the folder exists
-    if not folderExists(folder_path)
-        Dir.mkdir(folder_path)
-    end
-
+    #
+    # check if app needs to be created
+    #
+        # FIXME, add a check for whether or not the existing app folder is corrupt
+        if not folderExists(app_path)
+            # FIXME, build in a warning for telling when brew/node/electron etc is not installed
+            #        and the user might be an end-user rather than a dev
+            
+            # FIXME, I should probably do some ' escaping for the app_name and such
+            # create the applescript code
+            apple_code = <<-APPLECODE.remove_indent
+            tell application "Finder" to get folder of (path to me) as Unicode text
+            set path_ to POSIX path of result
+            do shell script "cd '" & path_ & "#{app_name}.Grif.app';electron ."
+            APPLECODE
+            # create the applescript file
+            createFile(name:".code.applescript", path:path_, code:apple_code)
+            # compile the applescript file into an app
+            `/usr/bin/osacompile -o '#{app_path}' '#{path_}.code.applescript'`
+            # delete the applescript file
+            `rm '#{path_}.code.applescript'`
+        end
+    
     # TODO, add comments to outside of indent
 
 
@@ -780,25 +817,22 @@ if ARGV.length >= 1
         
 
     # create files for the block that existed
-    pug_file    = File.new(folder_path+"/code.pug"   ,"w+"); pug_file.write(pug_code)      ; pug_file.close
-    sass_file   = File.new(folder_path+"/code.sass"  ,"w+"); sass_file.write(sass_code)    ; sass_file.close
-    coffee_file = File.new(folder_path+"/code.coffee","w+"); coffee_file.write(coffee_code); coffee_file.close
+    pug_file    = File.new(app_path+"/code.pug"   ,"w+"); pug_file.write(pug_code)      ; pug_file.close
+    sass_file   = File.new(app_path+"/code.sass"  ,"w+"); sass_file.write(sass_code)    ; sass_file.close
+    coffee_file = File.new(app_path+"/code.coffee","w+"); coffee_file.write(coffee_code); coffee_file.close
 
 
-        
-    
     # FIXME: add checks here for making sure everything compiled
 
     # convert files
-    pug_compile_response    = -"pug -P #{folder_path}/code.pug"
-    sass_compile_response   = -"sass #{folder_path}/code.sass 1>#{folder_path}/code.css"
-    coffee_compile_response = -"coffee --compile #{folder_path}/code.coffee"
+    pug_compile_response    = -"pug -P #{app_path}/code.pug"
+    sass_compile_response   = -"sass #{app_path}/code.sass 1>#{app_path}/code.css"
+    coffee_compile_response = -"coffee --compile #{app_path}/code.coffee"
 
-    puts "sass says:"
-    puts sass_compile_response
     # make the electron files
+        
         # main.js file
-        main_file = File.new(folder_path+"/main.js","w+")
+        main_file = File.new(app_path+"/main.js","w+")
         main_file_code = <<-'MAINFILE'
             // requirements 
             const { app , BrowserWindow , Menu } = require('electron')
@@ -881,7 +915,7 @@ if ARGV.length >= 1
         # package.json file
         # FIXME, change the make file to work for building an app for any OS
         # FIXME, figure out how to get data for all the fields in the package file
-        package_file = File.new(folder_path+"/package.json","w+")
+        package_file = File.new(app_path+"/package.json","w+")
         package_file_code = <<-PACKAGEFILE
             {
                 "name"       : "#{app_name}",
@@ -914,13 +948,13 @@ if ARGV.length >= 1
         needed_modules = ["electron-debug"]
 
         # if there are no modules
-        if not folderExists(folder_path+"/node_modules")
-            puts "Node modules folder doesnt exist yet"
+        if not folderExists(app_path+"/node_modules")
+            dput "Node modules folder doesnt exist yet"
             for each in needed_modules
-                -"cd #{folder_path};npm install #{each}"
+                -"cd #{app_path};npm install #{each}"
             end#for
         end#if 
         
         # TODO somehow make git integration easy
-        `cd #{folder_path};electron .`
+        `open #{app_path}`
 end#ARGV if
