@@ -121,16 +121,31 @@ def installEverything
     # pug, SASS, CoffeeScript, Electron, Electron-Dev
     #
         puts "about to install pug"
+        # pug -V
+        # pug version: 2.0.0-rc.4
+        # pug-cli version: 1.0.0-alpha6
         `npm install -g pug`
         `npm install pug-cli -g`
+        
         puts "about to install sass"
+        # sass --version
+        # 1.0.0-beta.4 compiled with dart2js 2.0.0-dev.10.0
         `npm install -g sass`
+
         puts "about to install coffeescript"
+        # coffee -v
+        # CoffeeScript version 1.12.7
         `npm install -g coffeescript`
+
         puts "about to install electron"
+        # electron -v
+        # v1.7.10
         `npm install -g electron`
+
         puts "about to install electron-dev"
         `npm install -g electron-dev`
+
         puts "okay all of those should be installed"
+
 end#installEverything
 installEverything
