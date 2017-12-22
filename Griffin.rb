@@ -705,259 +705,264 @@ $indent = '    '
 # TODO: add a demo argument 
 # if there is one argument or more
 if ARGV.length >= 1
-    dput "starting griffen, one or more args"
-    path_ = Dir.pwd + "/"
-    dput "path is:#{path_}"
-    dput "file is #{path_+ARGV[0]}"
-    the_file = File.open(path_+ARGV[0])
-    dput "opened file:#{path_+ARGV[0]}"
-    the_file_str = the_file.read
-    dput "finished reading file:#{path_+ARGV[0]}"
-    the_file.close
-    dput "closed file"
-
-    # create the folder
-    if ARGV.length >= 2 
-        # use the second argument as the griffen app name if there is a second argument
-        app_name = ARGV[1].sub(/\.grif$/,"")
-        app_path = path_+app_name+".Grif.app"
+    if ARGV[0] == "new"
+        `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/test.grif 1>new.grif;open new.grif`
     else
-        # use the same filename 
-        app_name = ARGV[0].sub(/\.grif$/,"")
-        app_path = path_+app_name+".Grif.app"
-    end
-    
-    #
-    # check if app needs to be created
-    #
-        # FIXME, add a check for whether or not the existing app folder is corrupt
-        if not folderExists(app_path)
-            # FIXME, build in a warning for telling when brew/node/electron etc is not installed
-            #        and the user might be an end-user rather than a dev
-            
-            # FIXME, I should probably do some ' escaping for the app_name and such
-            # create the applescript code
-            apple_code = <<-APPLECODE.remove_indent
-            tell application "Finder" to get folder of (path to me) as Unicode text
-            set path_ to POSIX path of result
-            do shell script "export PATH=\\\"/usr/local/bin:$PATH\\\";cd '" & path_ & "#{app_name}.Grif.app';electron ."
-            APPLECODE
-            # create the applescript file
-            createFile(name:".code.applescript", path:path_, code:apple_code)
-            # compile the applescript file into an app
-            `/usr/bin/osacompile -o '#{app_path}' '#{path_}.code.applescript'`
-            # delete the applescript file
-            `rm '#{path_}.code.applescript'`
-        end
-    
-    # TODO, add comments to outside of indent
 
+        dput "starting griffen, one or more args"
+        path_ = Dir.pwd + "/"
+        dput "path is:#{path_}"
+        dput "file is #{path_+ARGV[0]}"
+        the_file = File.open(path_+ARGV[0])
+        dput "opened file:#{path_+ARGV[0]}"
+        the_file_str = the_file.read
+        dput "finished reading file:#{path_+ARGV[0]}"
+        the_file.close
+        dput "closed file"
 
-    pug_code    = ""
-    sass_code   = ""
-    coffee_code = ""
-
-    block_finder = -/\B/
-    pug_indent = ''
-    # Find the blocks
-    loop do
-        # check for a block
-        result = the_file_str.match(block_finder)
-        the_file_str.sub!(block_finder,"")
-        if result
-            title = result["Title"]
-            #FIXME, fix the rebex indent group
-            indent = result["Block"].match(/^\s*/)[0]
-            match_indent = Regexp.new('(?<=\n|^)'+indent)
-            block = result["Block"].gsub(match_indent,"")
+        # create the folder
+        if ARGV.length >= 2 
+            # use the second argument as the griffen app name if there is a second argument
+            app_name = ARGV[1].sub(/\.grif$/,"")
+            app_path = path_+app_name+".Grif.app"
         else
-            break
-        end#if
-        
-        # check the interface
-        if title.match(/interface:? */)
-            pug_code = pug_code + block
-            pug_indent = indent
-        elsif title.match(/styles?:? */)
-            sass_code = sass_code + block
-        elsif title.match(/main:? */)
-            coffee_code = coffee_code + block
-        else 
-            # TAG:ERROR, should probably improve this message
-            puts "Well I found a code block labeled:#{title}, but I'm not sure what it means"
-            puts "Its probably suppose to be one of: 'interface:','styles:', or 'main:'"
+            # use the same filename 
+            app_name = ARGV[0].sub(/\.grif$/,"")
+            app_path = path_+app_name+".Grif.app"
         end
-    end#loop
-
-
-    # remove trailing whitespace
-    pug_code.rstrip!
-    sass_code.rstrip!
-    coffee_code.rstrip!
-
-    # TODO, check which of these things exist
-    
-    #
-    # add the wrapper code for pug 
-    #
-        # TODO, do a better job of this
-        # TODO, allow user to set title
         
-        # indent the pug_code twice, and add 8 spaces for the HEREDOC indent
-        pug_code.gsub!(/\n/,"\n        "+(pug_indent*2))
-
-        # insert the pug code into the body
-        pug_code = <<-PUGCODE.remove_indent
-        doctype html
-        html(lang="en")
-        #{pug_indent*1    }head
-        #{pug_indent*2        }meta(charset='UTF-8')
-        #{pug_indent*2        }title= "#{app_name}"
-        #{pug_indent*2        }link(rel='stylesheet', href='code.css')
-        #{pug_indent*1    }body
-        #{pug_indent*2        }#{pug_code}
-        PUGCODE
-        
-
-    # create files for the block that existed
-    pug_file    = File.new(app_path+"/code.pug"   ,"w+"); pug_file.write(pug_code)      ; pug_file.close
-    sass_file   = File.new(app_path+"/code.sass"  ,"w+"); sass_file.write(sass_code)    ; sass_file.close
-    coffee_file = File.new(app_path+"/code.coffee","w+"); coffee_file.write(coffee_code); coffee_file.close
-
-
-    # FIXME: add checks here for making sure everything compiled
-
-    # convert files
-    pug_compile_response    = -"pug -P #{app_path}/code.pug"
-    sass_compile_response   = -"sass #{app_path}/code.sass 1>#{app_path}/code.css"
-    coffee_compile_response = -"coffee --compile #{app_path}/code.coffee"
-
-    # make the electron files
-        
-        # main.js file
-        main_file = File.new(app_path+"/main.js","w+")
-        main_file_code = <<-'MAINFILE'
-            // requirements 
-            const { app , BrowserWindow , Menu } = require('electron')
-            // const electron = require('electron')
-            // const app = require('app')
-            // const BrowserWindow = require('browser-window')
-            const path = require('path')
-            require('electron-debug')({showDevTools: true})  // for debugging only 
-            
-            
-            
-            
-            // globals
-            let mainWindow
-            
-            app.on('ready', () => 
-                {
+        #
+        # check if app needs to be created
+        #
+            # FIXME, add a check for whether or not the existing app folder is corrupt
+            if not folderExists(app_path)
+                # FIXME, build in a warning for telling when brew/node/electron etc is not installed
+                #        and the user might be an end-user rather than a dev
                 
-                    mainWindow = new BrowserWindow(/*{titleBarStyle: 'hiddenInset'}*/);
-                    mainWindow.loadURL(path.join('file://', __dirname, 'code.html'))
-                    mainWindow.show()
-            
-            
-                    // Check if on a Mac
-                    if (process.platform === 'darwin') 
-                        {
-                            // Create our menu entries so that we can use the shortcuts
-                            Menu.setApplicationMenu(
-                                    Menu.buildFromTemplate(
-                                        [
-                                            {
-                                                label: 'Resh',
-                                                submenu: 
-                                                [
-                                                    { role: 'quit' },
-                                                ]
-                                            },
-                                            {
-                                                label: 'Edit',
-                                                submenu: 
-                                                [
-                                                    { role: 'undo' },
-                                                    { role: 'redo' },
-                                                    { type: 'separator' },
-                                                    { role: 'cut' },
-                                                    { role: 'copy' },
-                                                    { role: 'paste' },
-                                                    { role: 'pasteandmatchstyle' },
-                                                    { role: 'delete' },
-                                                    { role: 'selectall' }
-                                                ]
-                                            },
-                                            {
-                                                label: 'View',
-                                                submenu: 
-                                                [
-                                                    { role: 'togglefullscreen' },
-                                                ]
-                                            },
-                                            {
-                                                label: 'Window',
-                                                submenu: 
-                                                [
-                                                    { role: 'minimize' },
-                                                ]
-                                            }
-                                        ]))
-                        } // end "if mac"
-                }) // end app on-ready
-            
-            // when all the GUI windows are closed  // quit the app 
-            app.on('window-all-closed', () =>      { app.quit() }   )
-            
-            // if the app is started/clicked   // and there is no active window    // then create a window
-            app.on('activate', () =>     {     if (mainWindow === null)             { createWindow() }      }    )    
-        MAINFILE
-        main_file.write(main_file_code)
-        main_file.close
+                # FIXME, I should probably do some ' escaping for the app_name and such
+                # create the applescript code
+                apple_code = <<-APPLECODE.remove_indent
+                tell application "Finder" to get folder of (path to me) as Unicode text
+                set path_ to POSIX path of result
+                do shell script "export PATH=\\\"/usr/local/bin:$PATH\\\";cd '" & path_ & "#{app_name}.Grif.app';electron ."
+                APPLECODE
+                # create the applescript file
+                createFile(name:".code.applescript", path:path_, code:apple_code)
+                # compile the applescript file into an app
+                `/usr/bin/osacompile -o '#{app_path}' '#{path_}.code.applescript'`
+                # delete the applescript file
+                `rm '#{path_}.code.applescript'`
+            end
         
-        # package.json file
-        # FIXME, change the make file to work for building an app for any OS
-        # FIXME, figure out how to get data for all the fields in the package file
-        package_file = File.new(app_path+"/package.json","w+")
-        package_file_code = <<-PACKAGEFILE
-            {
-                "name"       : "#{app_name}",
-                "version"    : "1.0.0",
-                "description": "An app created using griffen",
-                "main"       : "main.js",
-                "scripts": 
-                    {
-                        "test": "electron .",
-                        "make": "electron-packager $PWD #{app_name} --debug --platform=darwin --arch=x64 --electron-version=1.6.11 --out=$HOME/Desktop --overwrite;mv $HOME/Desktop/resh-darwin-x64/#{app_name}.app $HOME/Desktop;rm -rf $HOME/Desktop/resh-darwin-x64"
-                    },
-                "keywords": [],
-                "author": "#{`echo $(whoami)`.chomp}",
-                "license": "",
-                "devDependencies": 
-                    {
-                        "devtron"          : "^1.4.0",
-                        "electron-packager": "^8.7.2"
-                    },
-                "dependencies": 
-                    {
-                        "electron-debug"   : "^1.4.0"                        
-                    }
-            }
-        PACKAGEFILE
-        package_file.write(package_file_code)
-        package_file.close
-        
-        # FIXME, make it so that the needed node modules are auto installed
-        needed_modules = ["electron-debug"]
+        # TODO, add comments to outside of indent
 
-        # if there are no modules
-        if not folderExists(app_path+"/node_modules")
-            dput "Node modules folder doesnt exist yet"
-            for each in needed_modules
-                -"cd #{app_path};npm install #{each}"
-            end#for
-        end#if 
+
+        pug_code    = ""
+        sass_code   = ""
+        coffee_code = ""
+
+        block_finder = -/\B/
+        pug_indent = ''
+        # Find the blocks
+        loop do
+            # check for a block
+            result = the_file_str.match(block_finder)
+            the_file_str.sub!(block_finder,"")
+            if result
+                title = result["Title"]
+                #FIXME, fix the rebex indent group
+                indent = result["Block"].match(/^\s*/)[0]
+                match_indent = Regexp.new('(?<=\n|^)'+indent)
+                block = result["Block"].gsub(match_indent,"")
+            else
+                break
+            end#if
+            
+            # check the interface
+            if title.match(/interface:? */)
+                pug_code = pug_code + block
+                pug_indent = indent
+            elsif title.match(/styles?:? */)
+                sass_code = sass_code + block
+            elsif title.match(/main:? */)
+                coffee_code = coffee_code + block
+            else 
+                # TAG:ERROR, should probably improve this message
+                puts "Well I found a code block labeled:#{title}, but I'm not sure what it means"
+                puts "Its probably suppose to be one of: 'interface:','styles:', or 'main:'"
+            end
+        end#loop
+
+
+        # remove trailing whitespace
+        pug_code.rstrip!
+        sass_code.rstrip!
+        coffee_code.rstrip!
+
+        # TODO, check which of these things exist
         
-        # TODO somehow make git integration easy
-        `open #{app_path}`
+        #
+        # add the wrapper code for pug 
+        #
+            # TODO, do a better job of this
+            # TODO, allow user to set title
+            
+            # indent the pug_code twice, and add 8 spaces for the HEREDOC indent
+            pug_code.gsub!(/\n/,"\n        "+(pug_indent*2))
+
+            # insert the pug code into the body
+            pug_code = <<-PUGCODE.remove_indent
+            doctype html
+            html(lang="en")
+            #{pug_indent*1    }head
+            #{pug_indent*2        }meta(charset='UTF-8')
+            #{pug_indent*2        }title= "#{app_name}"
+            #{pug_indent*2        }link(rel='stylesheet', href='code.css')
+            #{pug_indent*1    }body
+            #{pug_indent*2        }#{pug_code}
+            PUGCODE
+            
+
+        # create files for the block that existed
+        pug_file    = File.new(app_path+"/code.pug"   ,"w+"); pug_file.write(pug_code)      ; pug_file.close
+        sass_file   = File.new(app_path+"/code.sass"  ,"w+"); sass_file.write(sass_code)    ; sass_file.close
+        coffee_file = File.new(app_path+"/code.coffee","w+"); coffee_file.write(coffee_code); coffee_file.close
+
+
+        # FIXME: add checks here for making sure everything compiled
+
+        # convert files
+        pug_compile_response    = -"pug -P #{app_path}/code.pug"
+        sass_compile_response   = -"sass #{app_path}/code.sass 1>#{app_path}/code.css"
+        coffee_compile_response = -"coffee --compile #{app_path}/code.coffee"
+
+        # make the electron files
+            
+            # main.js file
+            main_file = File.new(app_path+"/main.js","w+")
+            main_file_code = <<-'MAINFILE'
+                // requirements 
+                const { app , BrowserWindow , Menu } = require('electron')
+                // const electron = require('electron')
+                // const app = require('app')
+                // const BrowserWindow = require('browser-window')
+                const path = require('path')
+                require('electron-debug')({showDevTools: true})  // for debugging only 
+                
+                
+                
+                
+                // globals
+                let mainWindow
+                
+                app.on('ready', () => 
+                    {
+                    
+                        mainWindow = new BrowserWindow(/*{titleBarStyle: 'hiddenInset'}*/);
+                        mainWindow.loadURL(path.join('file://', __dirname, 'code.html'))
+                        mainWindow.show()
+                
+                
+                        // Check if on a Mac
+                        if (process.platform === 'darwin') 
+                            {
+                                // Create our menu entries so that we can use the shortcuts
+                                Menu.setApplicationMenu(
+                                        Menu.buildFromTemplate(
+                                            [
+                                                {
+                                                    label: 'Resh',
+                                                    submenu: 
+                                                    [
+                                                        { role: 'quit' },
+                                                    ]
+                                                },
+                                                {
+                                                    label: 'Edit',
+                                                    submenu: 
+                                                    [
+                                                        { role: 'undo' },
+                                                        { role: 'redo' },
+                                                        { type: 'separator' },
+                                                        { role: 'cut' },
+                                                        { role: 'copy' },
+                                                        { role: 'paste' },
+                                                        { role: 'pasteandmatchstyle' },
+                                                        { role: 'delete' },
+                                                        { role: 'selectall' }
+                                                    ]
+                                                },
+                                                {
+                                                    label: 'View',
+                                                    submenu: 
+                                                    [
+                                                        { role: 'togglefullscreen' },
+                                                    ]
+                                                },
+                                                {
+                                                    label: 'Window',
+                                                    submenu: 
+                                                    [
+                                                        { role: 'minimize' },
+                                                    ]
+                                                }
+                                            ]))
+                            } // end "if mac"
+                    }) // end app on-ready
+                
+                // when all the GUI windows are closed  // quit the app 
+                app.on('window-all-closed', () =>      { app.quit() }   )
+                
+                // if the app is started/clicked   // and there is no active window    // then create a window
+                app.on('activate', () =>     {     if (mainWindow === null)             { createWindow() }      }    )    
+            MAINFILE
+            main_file.write(main_file_code)
+            main_file.close
+            
+            # package.json file
+            # FIXME, change the make file to work for building an app for any OS
+            # FIXME, figure out how to get data for all the fields in the package file
+            package_file = File.new(app_path+"/package.json","w+")
+            package_file_code = <<-PACKAGEFILE
+                {
+                    "name"       : "#{app_name}",
+                    "version"    : "1.0.0",
+                    "description": "An app created using griffen",
+                    "main"       : "main.js",
+                    "scripts": 
+                        {
+                            "test": "electron .",
+                            "make": "electron-packager $PWD #{app_name} --debug --platform=darwin --arch=x64 --electron-version=1.6.11 --out=$HOME/Desktop --overwrite;mv $HOME/Desktop/resh-darwin-x64/#{app_name}.app $HOME/Desktop;rm -rf $HOME/Desktop/resh-darwin-x64"
+                        },
+                    "keywords": [],
+                    "author": "#{`echo $(whoami)`.chomp}",
+                    "license": "",
+                    "devDependencies": 
+                        {
+                            "devtron"          : "^1.4.0",
+                            "electron-packager": "^8.7.2"
+                        },
+                    "dependencies": 
+                        {
+                            "electron-debug"   : "^1.4.0"                        
+                        }
+                }
+            PACKAGEFILE
+            package_file.write(package_file_code)
+            package_file.close
+            
+            # FIXME, make it so that the needed node modules are auto installed
+            needed_modules = ["electron-debug"]
+
+            # if there are no modules
+            if not folderExists(app_path+"/node_modules")
+                dput "Node modules folder doesnt exist yet"
+                for each in needed_modules
+                    -"cd #{app_path};npm install #{each}"
+                end#for
+            end#if 
+            
+            # TODO somehow make git integration easy
+            `open #{app_path}`
+    end#if "new"
 end#ARGV if
