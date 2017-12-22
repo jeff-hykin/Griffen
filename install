@@ -28,14 +28,22 @@ def installEverything
     #
     # homebrew
     #
-        puts "Starting install of homebrew"
-        `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" 2>/dev/null`
-
         #check homebrew
         stdout, stderr, status = Open3.capture3("brew -v")
         homebrew_installed = (  nil != stdout.match(/Homebrew \d+\.\d+/)  )
 
-        # FIXME, what to do if homebrew didn't install
+        if not homebrew_installed
+
+            puts "your password is needed to install homebrew (press enter)"
+            `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" 2>/dev/null`
+
+            #check homebrew
+            stdout, stderr, status = Open3.capture3("brew -v")
+            homebrew_installed = (  nil != stdout.match(/Homebrew \d+\.\d+/)  )
+        
+        end#if not installed
+        
+        # FIXME, what to do if homebrew didn't install after trying to install
         if not homebrew_installed
             puts "I couldn't get homebrew to install for some reason :/"
             return 
