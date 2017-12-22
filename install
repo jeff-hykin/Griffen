@@ -158,6 +158,7 @@ def installEverything
         puts "I'm going to put the Griffen files in /usr/local/bin/"
         puts "(Thats where pretty much all normal commands go)"
         `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/Griffin.rb 1>/usr/local/bin/Griffin.rb`
+        `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/Griffin.rb 1>/usr/local/bin/Griffin`
 
 end#installEverything
 installEverything
