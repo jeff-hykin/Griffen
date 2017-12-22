@@ -7,7 +7,7 @@ def installEverything
     # xcode tools 
     #
         puts "Starting install of x-code tools"
-        stdout, stderr, status = Open3.capture3("xcode-select --install")
+        stdout, stderr, status = Open3.capture3("bash;xcode-select --install")
         if stderr.match(/xcode-select: error: command line tools are already installed/)
             puts "xcode tools are installed, checking for xcode update"
             list_of_updates = `softwareupdate -l`
@@ -30,9 +30,7 @@ def installEverything
     #
         #check homebrew
         puts "about to check homebrew"
-        stdout, stderr, status = Open3.capture3("echo test success")
-        puts "testing:" + stdout
-        stdout, stderr, status = Open3.capture3("brew -v")
+        stdout, stderr, status = Open3.capture3("bash;brew -v")
         homebrew_installed = (  nil != stdout.match(/Homebrew \d+\.\d+/)  )
 
         if not homebrew_installed
@@ -41,7 +39,7 @@ def installEverything
             `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" 2>/dev/null`
 
             #check homebrew
-            stdout, stderr, status = Open3.capture3("brew -v")
+            stdout, stderr, status = Open3.capture3("bash;brew -v")
             homebrew_installed = (  nil != stdout.match(/Homebrew \d+\.\d+/)  )
         
         end#if not installed
@@ -60,7 +58,7 @@ def installEverything
     #
 
         puts "okay, starting to install node"
-        stdout, stderr, status = Open3.capture3("brew install node")
+        stdout, stderr, status = Open3.capture3("bash;brew install node")
         if stderr.match(/Warning: node [\d\._]+ is already installed/)
             puts "Okay good node was already installed, let me check a few things"
         end
@@ -105,10 +103,10 @@ def installEverything
         
 
         # check node
-        stdout, stderr, status = Open3.capture3("node -v")
+        stdout, stderr, status = Open3.capture3("bash;node -v")
         node_installed = (  nil != stdout.match(/v\d+\.\d+/)  )
         # check npm
-        stdout, stderr, status = Open3.capture3("npm -v")
+        stdout, stderr, status = Open3.capture3("bash;npm -v")
         npm_installed = ( nil != stdout.match(/\d+\.\d+/))
 
         # FIXME, what to do if node didn't install
