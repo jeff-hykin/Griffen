@@ -1,3 +1,4 @@
+require 'open3'
 
 
 # griffen install for mac
@@ -6,8 +7,8 @@ def installEverything
     # xcode tools 
     #
         puts "Starting install of x-code tools"
-        output = `xcode-select --install`
-        if output.match(/xcode-select: error: command line tools are already installed/)
+        stdout, stderr, status = Open3.capture3("xcode-select --install")
+        if stderr.match(/xcode-select: error: command line tools are already installed/)
             puts "xcode tools are installed, checking for xcode update"
             list_of_updates = `softwareupdate -l`
             update_name = list_of_updates.match(/(?<=\* )Command Line Tools.+/)
@@ -28,11 +29,11 @@ def installEverything
     # homebrew
     #
         puts "Starting install of homebrew"
-        `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+        `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" 2>/dev/null`
 
         #check homebrew
-        response = `brew -v`
-        homebrew_installed = (  nil != response.match(/Homebrew \d+\.\d+/)  )
+        stdout, stderr, status = Open3.capture3("brew -v")
+        homebrew_installed = (  nil != stdout.match(/Homebrew \d+\.\d+/)  )
 
         # FIXME, what to do if homebrew didn't install
         if not homebrew_installed
@@ -48,7 +49,11 @@ def installEverything
     #
 
         puts "okay, starting to install node"
-        output = `brew install node`
+        stdout, stderr, status = Open3.capture3("brew install node")
+        if stderr.match(/Warning: node [\d\._]+ is already installed/)
+            puts "Okay good node was already installed"
+        end#already installed update
+        
         puts "okay just now ran the command for installing node" 
     
         # Does path need to be fixed?
@@ -56,8 +61,8 @@ def installEverything
             # the node command still wont work because the 
             # computer doesnt know where the command is
             # so the path (where your computer looks) has to be manually updated
-            path_fix_is_needed = output.match(/If you need to have this software first in your PATH run:/)
-            path_fix = output.match(/If you need to have this software first in your PATH run:\n\s+(?<FirstPathCommand>.+)\n(?<SecondPathCommand>.+)/)
+            path_fix_is_needed = stderr.match(/If you need to have this software first in your PATH run:/)
+            path_fix = stderr.match(/If you need to have this software first in your PATH run:\n\s+(?<FirstPathCommand>.+)\n(?<SecondPathCommand>.+)/)
             # check for error 
                 if path_fix_is_needed and (path_fix == nil)
                     puts "There is a problem :/"
@@ -87,11 +92,11 @@ def installEverything
             end#if 
 
         # check node
-        response = `node -v`
-        node_installed = (  nil != response.match(/v\d+\.\d+/)  )
+        stdout, stderr, status = Open3.capture3("node -v")
+        node_installed = (  nil != stdout.match(/v\d+\.\d+/)  )
         # check npm
-        response = `npm -v`
-        npm_installed = ( nil != response.match(/\d+\.\d+/))
+        stdout, stderr, status = Open3.capture3("npm -v")
+        npm_installed = ( nil != stdout.match(/\d+\.\d+/))
 
         # FIXME, what to do if node didn't install
         if not node_installed or not npm_installed
@@ -106,6 +111,7 @@ def installEverything
     #
         puts "about to install pug"
         `npm install -g pug`
+        `npm install pug-cli -g`
         puts "about to install sass"
         `npm install -g sass`
         puts "about to install coffeescript"
