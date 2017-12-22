@@ -1,0 +1,4 @@
+#!/bin/bash
+ruby Griffin.rb $1
+# this is just a bash command that goes in /usr/local/bin/
+# all it does is call the ruby file with 1 argument
