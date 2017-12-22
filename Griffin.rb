@@ -697,6 +697,9 @@
 #
 #
 
+# TODO, add a folder mechanisim (for projects larger than one file)
+
+
 $debugging = true
 $indent = '    '
 # TODO: add a demo argument 
