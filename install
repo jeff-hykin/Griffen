@@ -8,7 +8,8 @@ require 'open3'
 # griffin install for mac
 def installEverything
     # FIXME, handle if there are mutliple users
-    
+        # create the .bash_profile if it doesnt already exist
+        `cd ;touch .bash_profile`
     #
     # xcode tools 
     #
