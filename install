@@ -1,5 +1,9 @@
 require 'open3'
 
+# The full url to run this file is: <br>
+# `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/install)"`
+
+
 
 # griffin install for mac
 def installEverything
