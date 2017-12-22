@@ -10,7 +10,7 @@ def installEverything
         if output.match(/xcode-select: error: command line tools are already installed/)
             puts "xcode tools are installed, checking for xcode update"
             list_of_updates = `softwareupdate -l`
-            update_name = list_of_updates.match(/(?<=* )Command Line Tools.+/)
+            update_name = list_of_updates.match(/(?<=\* )Command Line Tools.+/)
             if update_name != nil
                 puts "There is an update so I'm going to go ahead and install it okay?"
                 gets
