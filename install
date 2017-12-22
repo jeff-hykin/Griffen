@@ -3,6 +3,8 @@ require 'open3'
 
 # griffen install for mac
 def installEverything
+    # FIXME, handle if there are mutliple users
+    
     #
     # xcode tools 
     #
@@ -30,6 +32,9 @@ def installEverything
     #
         #check homebrew
         puts "about to check homebrew"
+        # Why is there "bash;..."? because without it, the 
+        # capture3 will throw an error and exit the program
+        # with bash; the error is contained with stderr
         stdout, stderr, status = Open3.capture3("bash;brew -v")
         homebrew_installed = (  nil != stdout.match(/Homebrew \d+\.\d+/)  )
 
@@ -98,8 +103,9 @@ def installEverything
                 bash_profile.puts(exact_install_string)
                 bash_profile.close
                 puts "    Okay, node was added to your path"
-
             end#if 
+
+            # FIXME, add a fix for the compiler variables too 
         
 
         # check node
@@ -118,6 +124,7 @@ def installEverything
         
         puts "Okay, I checked and node is installed"
         gets
+
     #
     # pug, SASS, CoffeeScript, Electron, Electron-Dev
     #
@@ -147,6 +154,10 @@ def installEverything
         `npm install -g electron-dev`
 
         puts "okay all of those should be installed"
+        puts 
+        puts "I'm going to put the Griffen files in /usr/local/bin/"
+        puts "(Thats where pretty much all normal commands go)"
+        `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/Griffin.rb 1>/usr/local/bin/Griffin.rb`
 
 end#installEverything
 installEverything
