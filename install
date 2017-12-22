@@ -29,6 +29,9 @@ def installEverything
     # homebrew
     #
         #check homebrew
+        puts "about to check homebrew"
+        stdout, stderr, status = Open3.capture3("echo test success")
+        puts "testing:" + stdout
         stdout, stderr, status = Open3.capture3("brew -v")
         homebrew_installed = (  nil != stdout.match(/Homebrew \d+\.\d+/)  )
 
