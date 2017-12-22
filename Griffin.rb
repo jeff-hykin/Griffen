@@ -688,8 +688,7 @@ if ARGV.length >= 1
             #FIXME, fix the rebex indent group
             indent = result["Block"].match(/^\s*/)[0]
             match_indent = Regexp.new('(?<=\n|^)'+indent)
-            block = result["Block
-"].gsub(match_indent,"")
+            block = result["Block"].gsub(match_indent,"")
         else
             break
         end#if

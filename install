@@ -1,7 +1,7 @@
 require 'open3'
 
 
-# griffen install for mac
+# griffin install for mac
 def installEverything
     # FIXME, handle if there are mutliple users
     
@@ -98,7 +98,7 @@ def installEverything
                 # FIXME, check and see if those locations are already in the path/ .bash_profile
                 # add those commands to the bash profile 
                 bash_profile = File.open(Dir.home+'/.bash_profile','a')
-                exact_install_string = "# When Griffen was installing node (through homebrew)\n# the PATH needed to be extended to include the node and npm commands\n# so the next two lines were added here in order to do that\n#{first_command}\n#{second_command}"
+                exact_install_string = "# When griffin was installing node (through homebrew)\n# the PATH needed to be extended to include the node and npm commands\n# so the next two lines were added here in order to do that\n#{first_command}\n#{second_command}"
                 # FIXME store exact_install_string somewhere so that uninstalls can be done easily
                 bash_profile.puts(exact_install_string)
                 bash_profile.close
@@ -155,10 +155,13 @@ def installEverything
 
         puts "okay all of those should be installed"
         puts 
-        puts "I'm going to put the Griffen files in /usr/local/bin/"
+        puts "I'm going to put the Griffin files in /usr/local/bin/"
         puts "(Thats where pretty much all normal commands go)"
         `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/Griffin.rb 1>/usr/local/bin/Griffin.rb`
-        `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/Griffin.rb 1>/usr/local/bin/Griffin`
-
+        `chmod u+x /usr/local/bin/Griffin.rb`
+        `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/griffin 1>/usr/local/bin/griffin`
+        `chmod u+x /usr/local/bin/griffin`
+        puts "Okay, Griffin has been installed!"
+        
 end#installEverything
 installEverything
