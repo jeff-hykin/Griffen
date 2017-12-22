@@ -19,7 +19,8 @@ def installEverything
                 puts "software update complete"
             else 
                 puts "Your xcode should be up to date!"
-            end
+            end#if update
+        end#if already installed
         puts "Okay xcode should be installed, press enter to continue"
         gets
 
