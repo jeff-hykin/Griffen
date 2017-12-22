@@ -1,11 +1,48 @@
-# debugging helper 
-$debugging = false
-$indent = ""
-def dput(string_input)
-    if $debugging
-        puts $indent + "#{string_input}"
+#
+#    Some tools  
+#
+    # debugging helper 
+    $debugging = false
+    $indent = ""
+    def dput(string_input)
+        if $debugging
+            puts $indent + "#{string_input}"
+        end
+    end 
+
+    # check if folder exists 
+    def folderExists(folder)
+        File.directory? folder
     end
-end 
+
+    # shell commands that include stderr
+    class String
+        # make -"" strings be shell commands that include stderr
+        def -@
+            require 'open3'
+            stdout, stderr, status = Open3.capture3("bash;"+self)
+            if stderr.length > 0 
+                return (stderr.sub(/sh: /,"")).chomp
+            else
+                return stdout.chomp
+            end 
+        end#def
+    end#String
+
+    # heredoc that removes indent 
+    class String
+        # example usage 
+            # puts <<-HEREDOC.remove_indent
+            # This command does such and such.
+            #     this part is extra indented
+            # HEREDOC
+        def remove_indent
+            gsub(/^[ \t]{#{self.match(/^[ \t]*/)[0].length}}/, '')
+        end
+    end
+#
+#    End Some tools
+#
 
 #
 #
@@ -667,17 +704,21 @@ if ARGV.length >= 1
         app_name = ARGV[0].sub(/\.grif$/,"")
         folder_path = path_+app_name+".Grif.app"
     end
-    `rm -r #{folder_path}`
-    Dir.mkdir(folder_path)
+    
+    # check if the folder exists
+    if not folderExists(folder_path)
+        Dir.mkdir(folder_path)
+    end
 
     # TODO, add comments to outside of indent
-    
+
 
     pug_code    = ""
     sass_code   = ""
     coffee_code = ""
 
     block_finder = -/\B/
+    pug_indent = ''
     # Find the blocks
     loop do
         # check for a block
@@ -696,6 +737,7 @@ if ARGV.length >= 1
         # check the interface
         if title.match(/interface:? */)
             pug_code = pug_code + block
+            pug_indent = indent
         elsif title.match(/styles?:? */)
             sass_code = sass_code + block
         elsif title.match(/main:? */)
@@ -714,27 +756,59 @@ if ARGV.length >= 1
     coffee_code.rstrip!
 
     # TODO, check which of these things exist
+    
+    #
+    # add the wrapper code for pug 
+    #
+        # TODO, do a better job of this
+        # TODO, allow user to set title
+        
+        # indent the pug_code twice, and add 8 spaces for the HEREDOC indent
+        pug_code.gsub!(/\n/,"\n        "+(pug_indent*2))
+
+        # insert the pug code into the body
+        pug_code = <<-PUGCODE.remove_indent
+        doctype html
+        html(lang="en")
+        #{pug_indent*1    }head
+        #{pug_indent*2        }meta(charset='UTF-8')
+        #{pug_indent*2        }title= "#{app_name}"
+        #{pug_indent*2        }link(rel='stylesheet', href='code.css')
+        #{pug_indent*1    }body
+        #{pug_indent*2        }#{pug_code}
+        PUGCODE
+        
 
     # create files for the block that existed
     pug_file    = File.new(folder_path+"/code.pug"   ,"w+"); pug_file.write(pug_code)      ; pug_file.close
     sass_file   = File.new(folder_path+"/code.sass"  ,"w+"); sass_file.write(sass_code)    ; sass_file.close
     coffee_file = File.new(folder_path+"/code.coffee","w+"); coffee_file.write(coffee_code); coffee_file.close
 
+
+        
+    
     # FIXME: add checks here for making sure everything compiled
 
     # convert files
-    pug_compile_response    = `pug #{folder_path}/code.pug`
-    sass_compile_response   = `sass #{folder_path}/code.sass`
-    coffee_compile_response = `coffee --compile #{folder_path}/code.coffee`
+    pug_compile_response    = -"pug -P #{folder_path}/code.pug"
+    sass_compile_response   = -"sass #{folder_path}/code.sass 1>#{folder_path}/code.css"
+    coffee_compile_response = -"coffee --compile #{folder_path}/code.coffee"
 
+    puts "sass says:"
+    puts sass_compile_response
     # make the electron files
         # main.js file
         main_file = File.new(folder_path+"/main.js","w+")
         main_file_code = <<-'MAINFILE'
             // requirements 
             const { app , BrowserWindow , Menu } = require('electron')
-            require('electron-debug')({showDevTools: true});  // for debugging only 
+            // const electron = require('electron')
+            // const app = require('app')
+            // const BrowserWindow = require('browser-window')
             const path = require('path')
+            require('electron-debug')({showDevTools: true})  // for debugging only 
+            
+            
             
             
             // globals
@@ -744,7 +818,7 @@ if ARGV.length >= 1
                 {
                 
                     mainWindow = new BrowserWindow(/*{titleBarStyle: 'hiddenInset'}*/);
-                    mainWindow.loadURL(path.join('file://', __dirname, 'index.html'))
+                    mainWindow.loadURL(path.join('file://', __dirname, 'code.html'))
                     mainWindow.show()
             
             
@@ -811,7 +885,7 @@ if ARGV.length >= 1
         package_file_code = <<-PACKAGEFILE
             {
                 "name"       : "#{app_name}",
-                "version"    : "0.0",
+                "version"    : "1.0.0",
                 "description": "An app created using griffen",
                 "main"       : "main.js",
                 "scripts": 
@@ -819,25 +893,34 @@ if ARGV.length >= 1
                         "test": "electron .",
                         "make": "electron-packager $PWD #{app_name} --debug --platform=darwin --arch=x64 --electron-version=1.6.11 --out=$HOME/Desktop --overwrite;mv $HOME/Desktop/resh-darwin-x64/#{app_name}.app $HOME/Desktop;rm -rf $HOME/Desktop/resh-darwin-x64"
                     },
-                "keywords": [
-                ],
-                "author": "",
+                "keywords": [],
+                "author": "#{`echo $(whoami)`.chomp}",
                 "license": "",
                 "devDependencies": 
                     {
                         "devtron"          : "^1.4.0",
-                        "electron-packager": "^8.7.2",
-                        "electron-debug"   : "^1.4.0"
+                        "electron-packager": "^8.7.2"
                     },
                 "dependencies": 
                     {
+                        "electron-debug"   : "^1.4.0"                        
                     }
-            }          
+            }
         PACKAGEFILE
         package_file.write(package_file_code)
         package_file.close
         
-        # FIXME do something about the node modules
+        # FIXME, make it so that the needed node modules are auto installed
+        needed_modules = ["electron-debug"]
+
+        # if there are no modules
+        if not folderExists(folder_path+"/node_modules")
+            puts "Node modules folder doesnt exist yet"
+            for each in needed_modules
+                -"cd #{folder_path};npm install #{each}"
+            end#for
+        end#if 
+        
         # TODO somehow make git integration easy
-        dput `cd #{folder_path};electron .`
+        `cd #{folder_path};electron .`
 end#ARGV if

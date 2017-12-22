@@ -153,6 +153,9 @@ def installEverything
         puts "about to install electron-dev"
         `npm install -g electron-dev`
 
+        puts "about to install electron-debug"
+        `npm install -g electron-debug`
+
         puts "okay all of those should be installed"
         puts 
         puts "I'm going to put the Griffin files in /usr/local/bin/"
