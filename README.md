@@ -1,5 +1,5 @@
 # Griffin
-An easy way to make apps (Project is in development)
+An easy way to make apps. Project is functional but in Alpha stages of development.
 
 
 # Install with
