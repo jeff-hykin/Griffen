@@ -820,6 +820,7 @@ if ARGV.length >= 1
             #{pug_indent*2        }link(rel='stylesheet', href='code.css')
             #{pug_indent*1    }body
             #{pug_indent*2        }#{pug_code}
+            #{pug_indent*2        }script(src='code.js')
             PUGCODE
             
 
