@@ -723,7 +723,7 @@ if ARGV.length >= 1
         puts "Okay, Griffin has been updated!"
     else
 
-        dput "starting griffen, one or more args"
+        dput "starting griffin, one or more args"
         path_ = Dir.pwd + "/"
         dput "path is:#{path_}"
         dput "file is #{path_+ARGV[0]}"
@@ -736,7 +736,7 @@ if ARGV.length >= 1
 
         # create the folder
         if ARGV.length >= 2 
-            # use the second argument as the griffen app name if there is a second argument
+            # use the second argument as the griffin app name if there is a second argument
             app_name = ARGV[1].sub(/\.grif$/,"")
             app_path = path_+app_name+".Grif.app"
         else
@@ -942,7 +942,7 @@ if ARGV.length >= 1
                 {
                     "name"       : "#{app_name}",
                     "version"    : "1.0.0",
-                    "description": "An app created using griffen",
+                    "description": "An app created using griffin",
                     "main"       : "main.js",
                     "scripts": 
                         {
