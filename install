@@ -375,6 +375,10 @@ def installEverything
 
             # FIXME, auto install the griffin extension for the correct editor 
         end#if 
+    
+    #
+    # Finish info
+    #
         puts "_________________________________________________________________"
         puts "                                                                 "
         puts "        ✨🎉✨🎊✨💥✨   Griffin is installed!!!  ✨🎉✨🎊✨💥✨     "
@@ -385,9 +389,11 @@ def installEverything
         answer = gets.chomp
         if answer == 'y' or answer == 'yes'
             `/usr/local/bin/griffin new`
+            puts ""
             puts "okay new.grif was created an opened"
-            puts "type the following command to run the app:"
-            puts "griffin new.grif"
+            puts ""
+            puts "type the following command to run the new app:"
+            puts "    griffin new.grif"
         else 
             puts "okay"
         end#if
