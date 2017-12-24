@@ -272,7 +272,7 @@ def installEverything
             if File.exist? "/usr/local/bin/new.grif"
                 `rm -f /usr/local/bin/new.grif`
             end 
-            `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/test.grif 1>/usr/local/bin/new.grif`
+            `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/new.grif 1>/usr/local/bin/new.grif`
             `chmod u+r /usr/local/bin/new.grif`
         
         puts "        Finished griffin file"
@@ -366,9 +366,9 @@ def installEverything
             # FIXME, auto install the griffin extension for the correct editor 
         end#if 
         puts "_________________________________________________________________"
-        puts "                                                             "
-        puts "        ✨🎉✨🎊✨💥✨   Griffin is installed!!!  ✨🎉✨🎊✨💥✨    "
-        puts "                                                             "
+        puts "                                                                 "
+        puts "        ✨🎉✨🎊✨💥✨   Griffin is installed!!!  ✨🎉✨🎊✨💥✨     "
+        puts "                                                                 "
         puts "_________________________________________________________________"
         puts ""
         puts "Want me to create a new app file?(y/n)"
