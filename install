@@ -275,6 +275,7 @@ def installEverything
             `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/test.grif 1>/usr/local/bin/new.grif`
             `chmod u+r /usr/local/bin/new.grif`
         
+        puts "        Finished griffin file"
 
     #
     # set default .grif opener 
@@ -334,7 +335,32 @@ def installEverything
                     `duti -s #{atom_id} .grif all`
                 when sublime_id
                     `duti -s #{sublime_id} .grif all`
+                when text_edit_id, xcode_id
+                    # if text edit or xcode are the default
+                    # then something is probably just not setup
+                    if has_vs_code
+                        `duti -s #{vs_code_id} .grif all`
+                    elsif has_atom
+                        `duti -s #{atom_id} .grif all`
+                    elsif has_sublime
+                        `duti -s #{sublime_id} .grif all`
+                    end#if
+                else 
+                    # if something else is selected 
+                    # then use it for griffin
+                    # TODO, think about potencial problems this could cause
+                    `duti -s #{file_id} .grif all`
                 end#case
+            else
+                # if there was an error 
+                # prefer vs code, then atom, then sublime
+                if has_vs_code
+                    `duti -s #{vs_code_id} .grif all`
+                elsif has_atom
+                    `duti -s #{atom_id} .grif all`
+                elsif has_sublime
+                    `duti -s #{sublime_id} .grif all`
+                end#if
             end#if
 
             # FIXME, auto install the griffin extension for the correct editor 
