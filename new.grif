@@ -6,8 +6,8 @@ main:
     SayHello = () ->
         alert("Hello World!")
     
-    # run the function after 4 seconds
-    setTimeout(SayHello, 4000)
+    # run the function after 2 seconds
+    setTimeout(SayHello, 2000)
 
 styles:
     h1
