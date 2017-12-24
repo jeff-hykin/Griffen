@@ -1,0 +1,11 @@
+interface:
+    h1 Hello World!
+
+main:
+    alert "Hello world!"
+
+styles:
+    h1
+        font-family: sans-serif
+        text-align: center
+    
