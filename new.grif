@@ -2,7 +2,12 @@ interface:
     h1 Hello World!
 
 main:
-    alert "Hello world!"
+    // create a Hello world function
+    SayHello = () ->
+        alert("Hello World!")
+    
+    // run the function after 4 seconds
+    setTimeout(SayHello, 4000)
 
 styles:
     h1

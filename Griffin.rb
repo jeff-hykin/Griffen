@@ -706,20 +706,31 @@ $indent = '    '
 # if there is one argument or more
 if ARGV.length >= 1
     if ARGV[0] == "new"
-        `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/test.grif 1>new.grif;open new.grif`
+        `cp /usr/local/bin/new.grif new.grif;open new.grif`
     elsif ARGV[0] == "update"
-        # if the file already exists, then delete it
-        if File.exist? "/usr/local/bin/Griffin.rb"
-            `rm /usr/local/bin/Griffin.rb`
-        end 
-        `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/Griffin.rb 1>/usr/local/bin/Griffin.rb`
-        `chmod u+x /usr/local/bin/Griffin.rb`
-        # if the file already exists, then delete it
-        if File.exist? "/usr/local/bin/griffin"
-            `rm /usr/local/bin/griffin`
-        end 
-        `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/griffin 1>/usr/local/bin/griffin`
-        `chmod u+x /usr/local/bin/griffin`
+        # Griffin.rb
+            # if the file already exists, then delete it
+            if File.exist? "/usr/local/bin/Griffin.rb"
+                `rm -f /usr/local/bin/Griffin.rb`
+            end 
+            `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/Griffin.rb 1>/usr/local/bin/Griffin.rb`
+            `chmod u+x /usr/local/bin/Griffin.rb`
+        
+        # griffin
+            # if the file already exists, then delete it
+            if File.exist? "/usr/local/bin/griffin"
+                `rm -f /usr/local/bin/griffin`
+            end 
+            `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/griffin 1>/usr/local/bin/griffin`
+            `chmod u+x /usr/local/bin/griffin`
+            
+        # new.grif
+            # if the file already exists, then delete it
+            if File.exist? "/usr/local/bin/new.grif"
+                `rm -f /usr/local/bin/new.grif`
+            end 
+            `curl -fsSL https://raw.githubusercontent.com/jeff-hykin/Griffin/master/test.grif 1>/usr/local/bin/new.grif`
+            `chmod u+r /usr/local/bin/new.grif`
         puts "Okay, Griffin has been updated!"
     else
 
